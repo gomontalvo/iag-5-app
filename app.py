@@ -1,9 +1,9 @@
 from flask import Flask, render_template, request
 from flask_bootstrap import Bootstrap5
 from openai import OpenAI
-from dotenv import load_dotenv
+#from dotenv import load_dotenv
 
-load_dotenv()
+#load_dotenv()
 
 client = OpenAI()
 app = Flask(__name__)
@@ -26,7 +26,7 @@ def chat():
             messages=[
                 {
                     "role": "system",
-                    "content": "Eres un chatbot que recomienda películas, te llamas 'Next Moby'. Tu rol es responder recomendaciones de manera breve y concisa.",
+                    "content": "Eres un chatbot que recomienda películas, te llamas 'Movienerd'. Tu rol es responder recomendaciones de manera breve y concisa.",
                 },
                 {
                     "role": "user",
@@ -43,7 +43,7 @@ def chat():
             messages=[
                 {
                     "role": "system",
-                    "content": "Eres un chatbot que recomienda películas, te llamas 'Next Moby'. Tu rol es responder recomendaciones de manera breve y concisa.",
+                    "content": "Eres un chatbot que recomienda películas, te llamas 'Movienerd'. Tu rol es responder recomendaciones de manera breve y concisa.",
                 },
                 {
                     "role": "user",
@@ -60,7 +60,7 @@ def chat():
             messages=[
                 {
                     "role": "system",
-                    "content": "Eres un chatbot que recomienda películas, te llamas 'Next Moby'. Tu rol es responder recomendaciones de manera breve y concisa.",
+                    "content": "Eres un chatbot que recomienda películas, te llamas 'Movienerd'. Tu rol es responder recomendaciones de manera breve y concisa.",
                 },
                 {
                     "role": "user",
