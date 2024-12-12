@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Next Muby (BETA)
+{% endblock %}
+
+{% block content %}
+    <h1>Next Muby (BETA)</h1>
+    <p>Haz click en el botón de abajo para obtener una recomendación</p>
+    <form method="post">
+        <input type="submit" name="intent" value="Quiero tener suerte" class="btn btn-primary" />
+        <input type="submit" name="intent" value="Terror" class="btn btn-secondary" />
+        <input type="submit" name="intent" value="Accion" class="btn btn-success" />
+        <input type="submit" name="intent" value="Comedia" class="btn btn-warning" />
+    </form>
+
+    {% if recommendation %}
+        <h2>Recomendación</h2>
+        <p>{{ recommendation }}</p>
+    {% endif %}
+{% endblock %}
