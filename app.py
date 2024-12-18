@@ -1,9 +1,9 @@
 from flask import Flask, render_template, request
 from flask_bootstrap import Bootstrap5
 from openai import OpenAI
-#from dotenv import load_dotenv
+from dotenv import load_dotenv
 
-#load_dotenv()
+load_dotenv()
 
 client = OpenAI()
 app = Flask(__name__)
@@ -21,6 +21,7 @@ def chat():
 
     intent = request.form.get('intent')
 
+    
     if intent == 'Quiero tener suerte':
         chat_completion = client.chat.completions.create(
             messages=[
