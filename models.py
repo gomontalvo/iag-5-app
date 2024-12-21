@@ -23,6 +23,7 @@ class User(db.Model):
 
 class Message(db.Model):
    __tablename__ = "messages"
+   
    id = Column(Integer, primary_key=True, autoincrement=True)
    created_at = Column(DateTime, default=datetime.utcnow)
    content = Column(Text, nullable=False)

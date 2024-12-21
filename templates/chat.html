@@ -26,7 +26,18 @@
 
        <form method="POST">
             <div class="input-group mb-3">
-                <input name="message" required="required" class="form-control" placeholder="Enviar mensaje a Movienerd" aria-label="Tu mensaje" aria-describedby="send-message"/>
+                <div class="input-group mb-3">
+                    <form action="/process-option" method="POST">
+                        {% for option in user_refs %}
+                            <input type="submit" 
+                                   name="intent" 
+                                   value="{{ option }}" 
+                                   class="btn btn-success" 
+                                   onclick="selectOption('{{ option }}')" />
+                        {% endfor %}
+                    </form>
+                </div>
+                <input name="message" class="form-control" placeholder="Enviar mensaje a Movienerd" aria-label="Tu mensaje" aria-describedby="send-message"/>
                 <input type="submit" class="btn btn-primary" id="send-message" name="intent" value="Enviar"/>
             </div>
         </form>

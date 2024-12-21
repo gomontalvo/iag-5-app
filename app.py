@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 from flask_bootstrap import Bootstrap5
 from openai import OpenAI
 from dotenv import load_dotenv
@@ -22,9 +22,10 @@ def index():
 @app.route('/chat', methods=['GET', 'POST'])
 def chat():
     user = db.session.query(User).first()
-
+   
+    options = ["Quiero tener suerte", "Comedia", "Acción"]
     if request.method == 'GET':
-        return render_template('chat.html', messages=user.messages)
+        return render_template('chat.html', messages=user.messages,user_refs=options)
 
     intent = request.form.get('intent')
 
@@ -64,7 +65,7 @@ def chat():
         db.session.add(Message(content=model_recommendation, author="assistant", user=user))
         db.session.commit()
 
-        return render_template('chat.html', messages=user.messages)
+        return render_template('chat.html', messages=user.messages,user_refs=options)
 
 
 @app.route('/user/<username>')
