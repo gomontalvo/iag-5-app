@@ -19,6 +19,7 @@ class User(db.Model):
    email = Column(String, nullable=False, unique=True)
 
    messages = relationship("Message", back_populates="user")
+   preferencias= relationship("Preferencias", back_populates="user")
 
 
 class Message(db.Model):
@@ -30,3 +31,12 @@ class Message(db.Model):
    author = Column(String, nullable=False)  # 'user' or 'assistant'
    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
    user = relationship("User", back_populates="messages")
+
+class Preferencias(db.Model):
+   __tablename__ = "preferencias"
+   
+   id = Column(Integer, primary_key=True, autoincrement=True)
+   preferencia = Column(Text, nullable=False)
+   categoria = Column(String, nullable=False)  # 'user' or 'assistant'
+   user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+   user = relationship("User", back_populates="preferencias")
