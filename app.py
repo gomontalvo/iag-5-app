@@ -23,7 +23,7 @@ def index():
 def chat():
     user = db.session.query(User).first()
    
-    options = ["Quiero tener suerte", "Comedia", "Acción"]
+    options = ["Quiero tener suerte", "Comedia", "Acción", "Terror"]
     if request.method == 'GET':
         return render_template('chat.html', messages=user.messages,user_refs=options)
 
