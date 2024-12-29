@@ -28,17 +28,12 @@ def chat():
    
     # Obtener preferencias del usuario
     preferences = db.session.query(Preferencias).filter_by(user_id=user.id).all()
-    genres = [pref.preferencia for pref in preferences if pref.categoria == 'G'][:5]  # Limitar a 5 géneros
-    titles = [pref.preferencia for pref in preferences if pref.categoria == 'T'][:5]  # Limitar a 5 títulos
-
-    # Crear dinámicamente intents a partir de las preferencias
+    genres = [pref.preferencia for pref in preferences if pref.categoria == 'G'][:5]
+    titles = [pref.preferencia for pref in preferences if pref.categoria == 'T'][:5]
+    
+    # Crear dinámicamente intents a partir de las preferencias de tipo Género (G)
     intents = {genre: f"Recomiéndame una película de {genre}" for genre in genres}
-    for title in titles:
-        if title not in intents:
-            intents[title] = f"Recomiéndame una película similar a {title}"
-
     intents['Quiero tener suerte'] = 'Recomiéndame una película'
-    intents['Enviar'] = request.form.get('message')
 
     options = list(intents.keys())
 
@@ -46,51 +41,23 @@ def chat():
         return render_template('chat.html', messages=user.messages, user_refs=options)
 
     intent = request.form.get('intent')
+    user_message = request.form.get('message')  # Mensaje original del usuario
 
     if intent in intents:
         user_message = intents[intent]
+        final_message = user_message  
+        if user_message== 'Recomiéndame una película':
+             preferences_text = " ,mis preferencias son: " + ", ".join(genres + titles)
+        else:
+            preferences_text = ""  # No se agregan preferencias si se selecciona Género de película
+    else:
+        # Crear el mensaje con contexto adicional para el modelo
+        preferences_text = " ,mis preferencias son: " + ", ".join(genres + titles)
+    
+    final_message = user_message + preferences_text  # Mensaje con contexto
 
-        # Guardar nuevo mensaje en la BD
-        db.session.add(Message(content=user_message, author="user", user=user))
-        db.session.commit()
-
-        messages_for_llm = [{
-            "role": "system",
-            "content": "Eres un chatbot que recomienda películas, te llamas 'Movienerd'. Tu rol es responder recomendaciones de manera breve y concisa. No repitas recomendaciones.",
-        }]
-
-        for message in user.messages:
-            messages_for_llm.append({
-                "role": message.author,
-                "content": message.content,
-            })
-
-        chat_completion = client.chat.completions.create(
-            messages=messages_for_llm,
-            model="gpt-4o",
-            temperature=1
-        )
-
-        model_recommendation = chat_completion.choices[0].message.content
-        db.session.add(Message(content=model_recommendation, author="assistant", user=user))
-        db.session.commit()
-
-        return render_template('chat.html', messages=user.messages, user_refs=options)
-
-    # Manejo en caso de que el intent no sea válido
-    return "Intento no válido", 400
-
-@app.post('/recommend')
-def recommend():
-    user = db.session.query(User).first()
-
-    if not user:
-        return "Usuario no encontrado", 404
-
-    data = request.get_json()
-    user_message = data['message']
-    new_message = Message(content=user_message, author="user", user=user)
-    db.session.add(new_message)
+    # Guardar solo el mensaje original del usuario en la base de datos
+    db.session.add(Message(content=user_message, author="user", user=user))
     db.session.commit()
 
     messages_for_llm = [{
@@ -104,18 +71,23 @@ def recommend():
             "content": message.content,
         })
 
+    # Incluir el mensaje con contexto adicional para el modelo
+    messages_for_llm.append({
+        "role": "user",
+        "content": final_message
+    })
+
     chat_completion = client.chat.completions.create(
         messages=messages_for_llm,
         model="gpt-4o",
+        temperature=1
     )
 
-    message = chat_completion.choices[0].message.content
+    model_recommendation = chat_completion.choices[0].message.content
+    db.session.add(Message(content=model_recommendation, author="assistant", user=user))
+    db.session.commit()
 
-    return {
-        'recommendation': message,
-        'tokens': chat_completion.usage.total_tokens,
-    }
-
+    return render_template('chat.html', messages=user.messages, user_refs=options)
 
 @app.route('/user/<int:user_id>', methods=['GET', 'POST'])
 def user_profile(user_id):
