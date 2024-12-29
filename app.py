@@ -98,21 +98,28 @@ def user_profile(user_id):
     if not user:
         return "Usuario no encontrado", 404
 
+    mensaje_error = None  # Variable para manejar mensajes de error
+
     if request.method == 'POST':
         # Recuperar datos del formulario
         preferencia = request.form.get('preferencia')
         categoria = request.form.get('categoria')
 
-        # Actualizar o crear preferencia
-        existing_pref = db.session.query(Preferencias).filter_by(user_id=user.id, categoria=categoria).first()
-        if existing_pref:
-            existing_pref.preferencia = preferencia
-        else:
-            db.session.add(Preferencias(preferencia=preferencia, categoria=categoria, user=user))
+        # Verificar si ya existe una preferencia igual
+        existing_pref = db.session.query(Preferencias).filter_by(
+            preferencia=preferencia,
+            categoria=categoria,
+            user_id=user.id
+        ).first()
 
-        # Guardar cambios en la base de datos
-        db.session.commit()
-        return redirect(url_for('user_profile', user_id=user.id))
+        if existing_pref:
+            # Evitar duplicados
+            mensaje_error = f"La preferencia '{preferencia}' ya existe en la categoría '{categoria}'."
+        else:
+            # Guardar nueva preferencia si no existe
+            db.session.add(Preferencias(preferencia=preferencia, categoria=categoria, user=user))
+            db.session.commit()
+            return redirect(url_for('user_profile', user_id=user.id))
 
     # Obtener preferencias actuales
     preferences = db.session.query(Preferencias).filter_by(user_id=user.id).all()
@@ -121,8 +128,11 @@ def user_profile(user_id):
         'user.html', 
         username=user.email,
         user_id=user.id,
-        preferences=preferences
+        preferences=preferences,
+        mensaje_error=mensaje_error  # Pasar mensaje de error al frontend
     )
+          
+
 
 @app.route('/user/<int:user_id>/delete_preference', methods=['POST'])
 def delete_preference(user_id):
@@ -131,11 +141,11 @@ def delete_preference(user_id):
     if not user:
         return "Usuario no encontrado", 404
 
-    # Recuperar datos del formulario para eliminar
-    categoria = request.form.get('categoria')
+    # Recuperar el ID de la preferencia a eliminar
+    preference_id = request.form.get('preference_id')
 
     # Buscar y eliminar la preferencia correspondiente
-    preference = db.session.query(Preferencias).filter_by(user_id=user.id, categoria=categoria).first()
+    preference = db.session.query(Preferencias).filter_by(id=preference_id, user_id=user.id).first()
     if preference:
         db.session.delete(preference)
         db.session.commit()

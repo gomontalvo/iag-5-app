@@ -1,45 +1,65 @@
 {% extends 'base.html' %}
 
 {% block title %}
-    Perfil de {{ username }}
+    Perfil de Usuario: {{ username }}
 {% endblock %}
 
 {% block content %}
-    <div class="container mt-5">
-        <h1>Perfil de Usuario: {{ username }}</h1>
+<div class="container mt-5">
+    <h1>Perfil de Usuario: {{ username }}</h1>
 
-        <form method="POST" action="{{ url_for('user_profile', user_id=user_id) }}">
-            <div class="mb-3">
-                <label for="preferencia" class="form-label">Preferencia</label>
-                <input type="text" id="preferencia" name="preferencia" class="form-control" placeholder="Escribe tu preferencia">
-            </div>
-
-            <div class="mb-3">
-                <label for="categoria" class="form-label">Tipo de Preferencia</label>
-                <select id="categoria" name="categoria" class="form-select">
-                    <option value="G">Género</option>
-                    <option value="P">Título Película</option>
-                </select>
-            </div>
-
-            <button type="submit" class="btn btn-primary">Guardar Preferencia</button>
-        </form>
-
-        <hr>
-
-        <h2>Eliminar Preferencias</h2>
-        <form method="POST" action="{{ url_for('delete_preference', user_id=user_id) }}">
-            <div class="mb-3">
-                <label for="preferencia" class="form-label">Preferencia</label>
-                <select id="preferencia" name="categoria" class="form-select">
-                    {% for preference in preferences %}
-                        <option value="{{ preference.categoria }}">{{ preference.preferencia }} ({{ preference.categoria }})</option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <button type="submit" class="btn btn-danger">Eliminar Preferencia</button>
-        </form>
+    <!-- Mostrar mensaje de error -->
+    {% if mensaje_error %}
+    <div class="alert alert-danger" role="alert">
+        {{ mensaje_error }}
     </div>
+    {% endif %}
+
+    <!-- Formulario para agregar nuevas preferencias -->
+    <form method="POST" action="{{ url_for('user_profile', user_id=user_id) }}">
+        <div class="mb-3">
+            <label for="preferencia" class="form-label">Preferencia</label>
+            <input type="text" id="preferencia" name="preferencia" class="form-control" placeholder="Escribe tu preferencia">
+        </div>
+        <div class="mb-3">
+            <label for="categoria" class="form-label">Tipo de Preferencia</label>
+            <select id="categoria" name="categoria" class="form-select">
+                <option value="G">Género - G</option>
+                <option value="T">Película - T</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Guardar Preferencia</button>
+    </form>
+
+    <hr>
+
+    <!-- Tabla para mostrar y eliminar preferencias -->
+    <h2>Eliminar Preferencias</h2>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Preferencia</th>
+                <th>Tipo</th>
+                <th>Acción</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for preference in preferences %}
+            <tr>
+                <td>{{ preference.preferencia }}</td>
+                <td>{{ preference.categoria }}</td>
+                <td>
+                    <form method="POST" action="{{ url_for('delete_preference', user_id=user_id) }}">
+                        <input type="hidden" name="preference_id" value="{{ preference.id }}">
+                        <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 {% endblock %}
+
+
 
