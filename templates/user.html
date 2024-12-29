@@ -1,15 +1,45 @@
 {% extends 'base.html' %}
 
 {% block title %}
-    {{ username }}
+    Perfil de {{ username }}
 {% endblock %}
 
 {% block content %}
-    <h1>Perfil de {{username}}</h1>
-    <h2>Películas favoritas</h2>
-    <ul>
-        {% for movie in favorite_movies %}
-            <li>{{ movie }}</li>
-        {% endfor %}
-    </ul>
+    <div class="container mt-5">
+        <h1>Perfil de Usuario: {{ username }}</h1>
+
+        <form method="POST" action="{{ url_for('user_profile', user_id=user_id) }}">
+            <div class="mb-3">
+                <label for="preferencia" class="form-label">Preferencia</label>
+                <input type="text" id="preferencia" name="preferencia" class="form-control" placeholder="Escribe tu preferencia">
+            </div>
+
+            <div class="mb-3">
+                <label for="categoria" class="form-label">Tipo de Preferencia</label>
+                <select id="categoria" name="categoria" class="form-select">
+                    <option value="G">Género</option>
+                    <option value="P">Título Película</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Guardar Preferencia</button>
+        </form>
+
+        <hr>
+
+        <h2>Eliminar Preferencias</h2>
+        <form method="POST" action="{{ url_for('delete_preference', user_id=user_id) }}">
+            <div class="mb-3">
+                <label for="preferencia" class="form-label">Preferencia</label>
+                <select id="preferencia" name="categoria" class="form-select">
+                    {% for preference in preferences %}
+                        <option value="{{ preference.categoria }}">{{ preference.preferencia }} ({{ preference.categoria }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-danger">Eliminar Preferencia</button>
+        </form>
+    </div>
 {% endblock %}
+

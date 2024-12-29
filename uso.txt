@@ -1,0 +1,85 @@
+1. Activar tu entorno virtual en Windows
+En Windows, el comando para “activar” un entorno virtual no se hace con source venv/bin/activate (esa es la sintaxis de Linux/Mac). En su lugar, se usa uno de los siguientes comandos desde la Consola/Command Prompt o PowerShell:
+
+Desde CMD (Command Prompt)
+bash
+Copiar código
+venv\Scripts\activate
+Desde PowerShell
+powershell
+Copiar código
+.\venv\Scripts\activate
+Asegúrate de que estás en la carpeta donde se encuentra la carpeta venv, es decir:
+
+bash
+Copiar código
+cd C:\Users\hecto\OneDrive\Documents\GitHub\iag-5-app
+y luego ejecuta:
+
+bash
+Copiar código
+venv\Scripts\activate
+o
+
+powershell
+Copiar código
+.\venv\Scripts\activate
+Nota: Si tu carpeta del entorno virtual se llama distinto a venv, sustituye el nombre donde corresponda.
+
+2. Configurar la variable de entorno OPENAI_API_KEY
+El error:
+
+vbnet
+Copiar código
+openai.OpenAIError: The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable
+indica que no se ha configurado la variable de entorno OPENAI_API_KEY. Tienes dos opciones para solucionarlo:
+
+Opción A: Configurar la variable de entorno en tu sistema o sesión
+CMD (Command Prompt):
+
+bash
+Copiar código
+set OPENAI_API_KEY=tu_api_key_aqui
+PowerShell:
+
+powershell
+Copiar código
+$env:OPENAI_API_KEY = "tu_api_key_aqui"
+Después de esto, puedes ejecutar:
+
+bash
+Copiar código
+flask run --debug
+y Flask debería reconocer tu variable de entorno.
+
+Opción B: Pasar la clave al crear el cliente en Python
+Si prefieres no usar variables de entorno, puedes pasar la clave directamente al crear el cliente. Por ejemplo, en tu app.py podrías hacer algo así:
+
+python
+Copiar código
+import openai
+
+openai.api_key = "tu_api_key_aqui"
+
+client = openai.OpenAI(api_key=openai.api_key)
+Sin embargo, para evitar exponer la clave en el código (especialmente si lo vas a subir a GitHub), se recomienda la Opción A: usar variables de entorno.
+
+Resumen de pasos recomendados
+Abre CMD o PowerShell.
+Ve a tu directorio del proyecto:
+bash
+Copiar código
+cd C:\Users\hecto\OneDrive\Documents\GitHub\iag-5-app
+Activa el entorno virtual (ejemplo para CMD):
+bash
+Copiar código
+venv\Scripts\activate
+Exporta tu variable de entorno OPENAI_API_KEY (ejemplo para CMD):
+bash
+Copiar código
+set OPENAI_API_KEY=tu_api_key_aqui
+Ejecuta tu aplicación Flask:
+bash
+Copiar código
+flask run --debug
+Con esto, tu aplicación debería poder acceder a la variable OPENAI_API_KEY y evitar el error de autenticación de OpenAI. ¡Éxito con tu proyecto!

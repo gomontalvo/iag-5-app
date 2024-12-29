@@ -34,9 +34,12 @@ class Message(db.Model):
 
 class Preferencias(db.Model):
    __tablename__ = "preferencias"
-   
+   #Id autoincremental
    id = Column(Integer, primary_key=True, autoincrement=True)
+   #Texto de la preferencia, ejemplo: "Terror" (Genero pelicula), "Pesadilla 3" (Nombre de pelicula)
    preferencia = Column(Text, nullable=False)
+   #String de la preferencia, ejemplo: "Genero", "Titulo"
    categoria = Column(String, nullable=False)  # 'user' or 'assistant'
+   #ID (fk) del usuario,, tabla User
    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
    user = relationship("User", back_populates="preferencias")
