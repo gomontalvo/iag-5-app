@@ -30,12 +30,11 @@ def chat():
     preferences = db.session.query(Preferencias).filter_by(user_id=user.id).all()
     genres = [pref.preferencia for pref in preferences if pref.categoria == 'G'][:5]  # Limitar a 5 géneros
     titles = [pref.preferencia for pref in preferences if pref.categoria == 'T'][:5]  # Limitar a 5 títulos
-
     # Crear dinámicamente intents a partir de las preferencias
     intents = {genre: f"Recomiéndame una película de {genre}" for genre in genres}
-    for title in titles:
-        if title not in intents:
-            intents[title] = f"Recomiéndame una película similar a {title}"
+    for genre in genres:
+        if genre not in intents:
+            intents[genre] = f"Recomiéndame una película similar a {genre}"
 
     intents['Quiero tener suerte'] = 'Recomiéndame una película'
     intents['Enviar'] = request.form.get('message')
