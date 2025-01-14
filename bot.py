@@ -1,4 +1,4 @@
-from movies import search, search_platforms
+from movies import search, search_platforms, search_credits
 from openai import OpenAI
 from models import User
 
@@ -53,6 +53,30 @@ def search_movie_or_tv_show(client: OpenAI, search_term: str, user: User):
         system_prompt = build_prompt(user, str(movie_or_tv_show))
     else:
         system_prompt = build_prompt(user, '')
+
+    messages_for_llm = [{"role": "system", "content": system_prompt}]
+
+    for message in user.messages:
+        messages_for_llm.append({
+            "role": message.author,
+            "content": message.content,
+        })
+
+    chat_completion = client.chat.completions.create(
+        messages=messages_for_llm,
+        model="gpt-4o",
+        temperature=1,
+    )
+
+    return chat_completion.choices[0].message.content
+
+def search_movie_credits(client: OpenAI, search_term: str, user: User):
+    creditos = search_credits(search_term)
+
+    if not creditos:
+        return f'No estoy seguro de dónde puedes ver esta película o serie :(, pero quizas puedes revisar en JustWatch: https://www.justwatch.com/cl/buscar?q={search_term}'
+
+    system_prompt = build_prompt(user, str(creditos))
 
     messages_for_llm = [{"role": "system", "content": system_prompt}]
 

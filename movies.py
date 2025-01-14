@@ -32,3 +32,28 @@ def search_platforms(movie_name):
         })
 
     return platforms
+
+def search_credits(movie_name):
+    
+    search = tmdb.Search()
+    response = search.multi(query=movie_name, language='es-CL')
+    creditos = ['Tom Hanks','Eddie Murphy']
+    #if not search.results:
+    #    return creditos
+
+    #return search.response[0]
+    
+    #results = tmdb.Credits(query=reponse.moviid, "es-CL",)
+
+    #if not results:
+    #    return platforms
+
+    #for offer in results[0].offers:
+    #    creditos.append({
+    #       'name': offer.cast.name,
+    #       'icon': offer.cast.,
+    #       'url': offer.url,
+    #  })
+
+    return creditos
+

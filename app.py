@@ -8,7 +8,7 @@ from forms import ProfileForm, SignUpForm, LoginForm
 from flask_wtf.csrf import CSRFProtect
 from os import getenv
 import json
-from bot import search_movie_or_tv_show, where_to_watch
+from bot import search_movie_or_tv_show, where_to_watch, search_movie_credits
 from flask_login import LoginManager, login_required, login_user, current_user, logout_user
 from flask_bcrypt import Bcrypt
 from flask import redirect, url_for
@@ -16,7 +16,7 @@ from flask import redirect, url_for
 load_dotenv()
 
 
-#login_manager = LoginManager()
+login_manager = LoginManager()
 #login_manager.login_view = 'login'
 #login_manager.login_message = 'Inicia sesión para continuar'
 client = OpenAI()
@@ -67,6 +67,26 @@ tools = [
                     "name": {
                         "type": "string",
                         "description": "The name of the movie/tv show to search for"
+                    }
+                },
+                "additionalProperties": False
+            }
+        },
+    },
+    {
+        'type': 'function',
+        'function': {
+            "name": "search_movie_credits",
+            "description": "Returns a list of credits of the movie or serie.",
+            "parameters": {
+                "type": "object",
+                "required": [
+                    "name"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "The credits of the movie or series to search for"
                     }
                 },
                 "additionalProperties": False
@@ -144,7 +164,8 @@ def chat():
     chat_completion = client.chat.completions.create(
         messages=messages_for_llm,
         model="gpt-4o",
-        temperature=1
+        temperature=1,
+        tools=tools
     )
 
     model_recommendation = chat_completion.choices[0].message.content
