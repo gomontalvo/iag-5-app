@@ -8,7 +8,7 @@ from forms import ProfileForm, SignUpForm, LoginForm
 from flask_wtf.csrf import CSRFProtect
 from os import getenv
 import json
-from bot import search_movie_or_tv_show, where_to_watch, movie_creditos
+from bot import search_movie_or_tv_show, where_to_watch, search_movie_creditos
 from flask_login import LoginManager, login_required, login_user, current_user, logout_user
 from flask_bcrypt import Bcrypt
 from flask import redirect, url_for
@@ -71,7 +71,7 @@ tools = [
     {
         'type': 'function',
         'function': {
-            "name": "search_creditos",
+            "name": "search_movie_creditos",
             "description": "Returns a list of credits or cast",
             "parameters": {
                 "type": "object",
@@ -176,10 +176,10 @@ def chat():
             arguments = json.loads(tool_call.function.arguments)
             name = arguments['name']
             model_recommendation = search_movie_or_tv_show(client, name, user)
-        elif tool_call.function.name == 'search_creditos':
+        elif tool_call.function.name == 'search_movie_creditos':
             arguments = json.loads(tool_call.function.arguments)
             name = arguments['name']
-            model_recommendation = movie_creditos(client, name, user)
+            model_recommendation = search_movie_creditos(client, name, user)
     else:
         model_recommendation = chat_completion.choices[0].message.content
 

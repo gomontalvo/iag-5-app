@@ -34,7 +34,7 @@ def search_platforms(movie_name):
     return platforms
 
 def search_creditos(movie_name):
-    results = justwatch_search(movie_name, "es")
+    results = tmdb.Credits(movie_name, "es")
     creditos = []
 
     if not results:
