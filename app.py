@@ -100,7 +100,6 @@ def index():
     return render_template('landing.html')
 
 
-
 @app.route('/chat', methods=['GET', 'POST'])
 def chat():
     user = db.session.query(User).first()
@@ -165,10 +164,25 @@ def chat():
         messages=messages_for_llm,
         model="gpt-4o",
         temperature=1,
-        tools=tools
+        tools=tools,
     )
 
-    model_recommendation = chat_completion.choices[0].message.content
+    #model_recommendation = chat_completion.choices[0].message.content
+
+    if chat_completion.choices[0].message.tool_calls:
+        tool_call = chat_completion.choices[0].message.tool_calls[0]
+
+        if tool_call.function.name == 'where_to_watch':
+            arguments = json.loads(tool_call.function.arguments)
+            name = arguments['name']
+            model_recommendation = where_to_watch(client, name, user, ", ".join(genres))
+        elif tool_call.function.name == 'search_movie_or_tv_show':
+            arguments = json.loads(tool_call.function.arguments)
+            name = arguments['name']
+            model_recommendation = search_movie_or_tv_show(client, name, user, ", ".join(genres))
+    else:
+        model_recommendation = chat_completion.choices[0].message.content
+
     db.session.add(Message(content=model_recommendation, author="assistant", user=user))
     db.session.commit()
 
