@@ -27,7 +27,7 @@ def where_to_watch(client: OpenAI, search_term: str, user: User, generopref: str
     movie_or_tv_show = search_platforms(search_term)
 
     if not movie_or_tv_show:
-        return f'No estoy seguro de dónde puedes ver esta película o serie :(, pero quizas puedes revisar en JustWatch: https://www.justwatch.com/cl/buscar?q={search_term}'
+        return f'No estoy seguro de dónde puedes ver esta película o serie :(, pero quizas puedes revisar en TMDB: https://www.themoviedb.org/'
 
     system_prompt = build_prompt(user, str(movie_or_tv_show), generopref)
 
@@ -76,7 +76,7 @@ def search_movie_credits(client: OpenAI, search_term: str, user: User, generopre
     creditos = search_credits(search_term)
 
     if not creditos:
-        return f'No estoy seguro de dónde puedes ver esta película o serie :(, pero quizas puedes revisar en JustWatch: https://www.justwatch.com/cl/buscar?q={search_term}'
+        return f'No estoy seguro de dónde puedes ver esta película o serie :(, pero quizas puedes revisar en TMDB: https://www.themoviedb.org/'
 
     system_prompt = build_prompt(user, str(creditos), generopref)
 

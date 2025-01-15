@@ -77,7 +77,7 @@ tools = [
         'type': 'function',
         'function': {
             "name": "search_movie_credits",
-            "description": "Returns a list of credits of the movie or serie.",
+            "description": "Returns a list of credits or actors of the movie or TV show.",
             "parameters": {
                 "type": "object",
                 "required": [
@@ -173,6 +173,10 @@ def chat():
         tool_call = chat_completion.choices[0].message.tool_calls[0]
 
         if tool_call.function.name == 'where_to_watch':
+            arguments = json.loads(tool_call.function.arguments)
+            name = arguments['name']
+            model_recommendation = where_to_watch(client, name, user, ", ".join(genres))
+        elif tool_call.function.name == 'search_movie_credits':
             arguments = json.loads(tool_call.function.arguments)
             name = arguments['name']
             model_recommendation = where_to_watch(client, name, user, ", ".join(genres))
