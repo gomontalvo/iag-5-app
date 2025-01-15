@@ -28,11 +28,13 @@
             <div class="input-group mb-3">
                 <div class="input-group mb-3">
                     <form action="/process-option" method="POST">
+                        <p style="font-weight: bold; margin-top: 14px;"> Preferencias: </p>
                         {% for option in user_refs %}
                             <input type="submit" 
                                    name="intent" 
                                    value="{{ option }}" 
                                    class="btn btn-success" 
+                                   style="margin: 5px;" 
                                    onclick="selectOption('{{ option }}')" />
                         {% endfor %}
                     </form>
