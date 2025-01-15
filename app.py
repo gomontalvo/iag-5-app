@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, jsonify 
 from flask_bootstrap import Bootstrap5
 from openai import OpenAI
 from dotenv import load_dotenv
@@ -8,24 +8,29 @@ from forms import ProfileForm, SignUpForm, LoginForm
 from flask_wtf.csrf import CSRFProtect
 from os import getenv
 import json
-from bot import search_movie_or_tv_show, where_to_watch, search_movie_creditos
+from bot import search_movie_or_tv_show, where_to_watch, search_movie_credits
 from flask_login import LoginManager, login_required, login_user, current_user, logout_user
 from flask_bcrypt import Bcrypt
 from flask import redirect, url_for
 
 load_dotenv()
 
-#login_manager = LoginManager()
+
+login_manager = LoginManager()
 #login_manager.login_view = 'login'
 #login_manager.login_message = 'Inicia sesión para continuar'
 client = OpenAI()
 app = Flask(__name__)
-#pp.secret_key = getenv('SECRET_KEY')
+#app.secret_key = getenv('SECRET_KEY')
 bootstrap = Bootstrap5(app)
-csrf = CSRFProtect(app)
+#csrf = CSRFProtect(app)
 #login_manager.init_app(app)
-bcrypt = Bcrypt(app)
+#bcrypt = Bcrypt(app)
 db_config(app)
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
 
 tools = [
     {
@@ -71,8 +76,8 @@ tools = [
     {
         'type': 'function',
         'function': {
-            "name": "search_movie_creditos",
-            "description": "Returns a list of credits or cast",
+            "name": "search_movie_credits",
+            "description": "Returns a list of credits or actors of the movie or TV show.",
             "parameters": {
                 "type": "object",
                 "required": [
@@ -81,7 +86,7 @@ tools = [
                 "properties": {
                     "name": {
                         "type": "string",
-                        "description": "The list of credits in the movie or serie"
+                        "description": "The credits of the movie or series to search for"
                     }
                 },
                 "additionalProperties": False
@@ -90,11 +95,9 @@ tools = [
     }
 ]
 
-
 @app.route('/')
 def index():
     return render_template('landing.html')
-
 
 
 @app.route('/chat', methods=['GET', 'POST'])
@@ -165,34 +168,27 @@ def chat():
     )
 
     #model_recommendation = chat_completion.choices[0].message.content
+
     if chat_completion.choices[0].message.tool_calls:
         tool_call = chat_completion.choices[0].message.tool_calls[0]
 
         if tool_call.function.name == 'where_to_watch':
             arguments = json.loads(tool_call.function.arguments)
-            name = arguments['movie_name']
-            model_recommendation = where_to_watch(client, name, user)
+            name = arguments['name']
+            model_recommendation = where_to_watch(client, name, user, ", ".join(genres))
+        elif tool_call.function.name == 'search_movie_credits':
+            arguments = json.loads(tool_call.function.arguments)
+            name = arguments['name']
+            model_recommendation = where_to_watch(client, name, user, ", ".join(genres))
         elif tool_call.function.name == 'search_movie_or_tv_show':
             arguments = json.loads(tool_call.function.arguments)
             name = arguments['name']
-            model_recommendation = search_movie_or_tv_show(client, name, user)
-        elif tool_call.function.name == 'search_movie_creditos':
-            arguments = json.loads(tool_call.function.arguments)
-            name = arguments['name']
-            model_recommendation = search_movie_creditos(client, name, user)
+            model_recommendation = search_movie_or_tv_show(client, name, user, ", ".join(genres))
     else:
         model_recommendation = chat_completion.choices[0].message.content
 
     db.session.add(Message(content=model_recommendation, author="assistant", user=user))
     db.session.commit()
-
-    accept_header = request.headers.get('Accept')
-    if accept_header and 'application/json' in accept_header:
-        last_message = user.messages[-1]
-        return jsonify({
-            'author': last_message.author,
-            'content': last_message.content,
-        })
 
     return render_template('chat.html', messages=user.messages, user_refs=options)
 

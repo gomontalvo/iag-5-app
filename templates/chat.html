@@ -24,19 +24,26 @@
             {% endif %}
         {% endfor %}
 
-       <form method="POST">
+        <form method="POST">
             <div class="input-group mb-3">
                 <div class="input-group mb-3">
                     <form action="/process-option" method="POST">
+                        <p style="font-weight: bold; margin-top: 14px;"> Preferencias: </p>
                         {% for option in user_refs %}
                             <input type="submit" 
                                    name="intent" 
                                    value="{{ option }}" 
                                    class="btn btn-success" 
+                                   style="margin: 5px;" 
                                    onclick="selectOption('{{ option }}')" />
                         {% endfor %}
                     </form>
                 </div>
+            </div>
+        </form>
+
+        <form method="POST">
+            <div class="input-group mb-3">
                 <input name="message" class="form-control" placeholder="Enviar mensaje a Movienerd" aria-label="Tu mensaje" aria-describedby="send-message"/>
                 <input type="submit" class="btn btn-primary" id="send-message" name="intent" value="Enviar"/>
             </div>
