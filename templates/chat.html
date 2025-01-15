@@ -24,7 +24,7 @@
             {% endif %}
         {% endfor %}
 
-       <form method="POST">
+        <form method="POST">
             <div class="input-group mb-3">
                 <div class="input-group mb-3">
                     <form action="/process-option" method="POST">
@@ -37,6 +37,11 @@
                         {% endfor %}
                     </form>
                 </div>
+            </div>
+        </form>
+
+        <form method="POST">
+            <div class="input-group mb-3">
                 <input name="message" class="form-control" placeholder="Enviar mensaje a Movienerd" aria-label="Tu mensaje" aria-describedby="send-message"/>
                 <input type="submit" class="btn btn-primary" id="send-message" name="intent" value="Enviar"/>
             </div>
