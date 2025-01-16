@@ -5,45 +5,6 @@ from wtforms import ValidationError
 from models import User
 
 
-<<<<<<< HEAD
-=======
-class ProfileForm(FlaskForm):
-    favorite_genre = SelectField(
-        '¿Qué género de película te gusta más?',
-        choices=[
-            ('Ninguno en particular', 'Ninguno en particular'),
-            ('Acción', 'Acción'),
-            ('Aventura', 'Aventura'),
-            ('Comedia', 'Comedia'),
-            ('Drama', 'Drama'),
-            ('Fantasía', 'Fantasía'),
-            ('Ciencia Ficción', 'Ciencia Ficción'),
-            ('Musical', 'Musical'),
-            ('Romance', 'Romance'),
-            ('Suspenso', 'Suspenso'),
-            ('Animación', 'Animación'),
-        ]
-    )
-    disliked_genre = SelectField(
-        '¿Qué género de película prefieres evitar?',
-        choices=[
-            ('Ninguno en particular', 'Ninguno en particular'),
-            ('Acción', 'Acción'),
-            ('Aventura', 'Aventura'),
-            ('Comedia', 'Comedia'),
-            ('Drama', 'Drama'),
-            ('Fantasía', 'Fantasía'),
-            ('Ciencia Ficción', 'Ciencia Ficción'),
-            ('Musical', 'Musical'),
-            ('Romance', 'Romance'),
-            ('Suspenso', 'Suspenso'),
-            ('Animación', 'Animación'),
-        ]
-    )
-    submit = SubmitField('Guardar')
-
-
->>>>>>> 3f47aa20757cd3ac91bc331297ca0fa86beae2a9
 class SignUpForm(FlaskForm):
     email = StringField('Correo Electrónico', validators=[DataRequired(), Email(message='Esto no parece ser un correo válido')])
     password = PasswordField('Contraseña', validators=[DataRequired(message='Este campo es obligatorio')])
@@ -65,8 +26,3 @@ class LoginForm(FlaskForm):
     email = StringField('Correo Electrónico', validators=[DataRequired(), Email(message='Esto no parece ser un correo válido')])
     password = PasswordField('Contraseña', validators=[DataRequired(message='Este campo es obligatorio')])
     submit = SubmitField('Iniciar Sesión')
-<<<<<<< HEAD
-
-    
-=======
->>>>>>> 3f47aa20757cd3ac91bc331297ca0fa86beae2a9

@@ -4,7 +4,6 @@ from openai import OpenAI
 from dotenv import load_dotenv
 from db import db, db_config
 from models import User, Message, Preferencias
-<<<<<<< HEAD
 from forms import  SignUpForm, LoginForm
 from flask_wtf.csrf import CSRFProtect
 from os import getenv
@@ -23,37 +22,13 @@ login_manager.login_message = 'Inicia sesión para continuar'
 client = OpenAI()
 app = Flask(__name__)
 app.secret_key = 'yuqita78@_'#arreglar después por variable de entonno
-
+bootstrap = Bootstrap5(app)
 app.config['WTF_CSRF_ENABLED'] = True
 
 csrf = CSRFProtect(app)
 login_manager.init_app(app)
 bcrypt = Bcrypt(app)
 
-=======
-from forms import ProfileForm, SignUpForm, LoginForm
-from flask_wtf.csrf import CSRFProtect
-from os import getenv
-import json
-from bot import search_movie_or_tv_show, where_to_watch, search_movie_credits
-from flask_login import LoginManager, login_required, login_user, current_user, logout_user
-from flask_bcrypt import Bcrypt
-from flask import redirect, url_for
-
-load_dotenv()
-
-
-login_manager = LoginManager()
-#login_manager.login_view = 'login'
-#login_manager.login_message = 'Inicia sesión para continuar'
-client = OpenAI()
-app = Flask(__name__)
-#app.secret_key = getenv('SECRET_KEY')
->>>>>>> 3f47aa20757cd3ac91bc331297ca0fa86beae2a9
-bootstrap = Bootstrap5(app)
-#csrf = CSRFProtect(app)
-#login_manager.init_app(app)
-#bcrypt = Bcrypt(app)
 db_config(app)
 
 @login_manager.user_loader
@@ -264,11 +239,6 @@ def chat():
         tools=tools,
     )
 
-<<<<<<< HEAD
-=======
-    #model_recommendation = chat_completion.choices[0].message.content
-
->>>>>>> 3f47aa20757cd3ac91bc331297ca0fa86beae2a9
     if chat_completion.choices[0].message.tool_calls:
         tool_call = chat_completion.choices[0].message.tool_calls[0]
 
@@ -279,11 +249,7 @@ def chat():
         elif tool_call.function.name == 'search_movie_credits':
             arguments = json.loads(tool_call.function.arguments)
             name = arguments['name']
-<<<<<<< HEAD
             model_recommendation = search_movie_credits(client, name, user, ", ".join(genres))
-=======
-            model_recommendation = where_to_watch(client, name, user, ", ".join(genres))
->>>>>>> 3f47aa20757cd3ac91bc331297ca0fa86beae2a9
         elif tool_call.function.name == 'search_movie_or_tv_show':
             arguments = json.loads(tool_call.function.arguments)
             name = arguments['name']
@@ -295,6 +261,7 @@ def chat():
     db.session.commit()
 
     return render_template('chat.html', messages=user.messages, user_refs=options)
+
 
 @app.route('/sign-up', methods=['GET', 'POST'])
 def sign_up():
@@ -394,3 +361,4 @@ def delete_preference():
         flash("No se encontró la preferencia especificada.", "error")
 
     return redirect(url_for('user_profile'))
+
