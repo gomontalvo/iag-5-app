@@ -10,7 +10,6 @@ from os import getenv
 import json
 from flask_login import LoginManager, login_required, login_user, current_user, logout_user
 from flask_bcrypt import Bcrypt
-from langsmith.wrappers import wrap_openai
 from bot import search_movie_or_tv_show, where_to_watch, search_movie_credits
 
 load_dotenv()
