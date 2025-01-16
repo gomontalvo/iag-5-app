@@ -10,7 +10,7 @@
   {% for message in messages %}
     {% if message.author == 'assistant' %}
         <div class="d-flex flex-row justify-content-start mb-4">
-            <img class="bg-white" src="{{ url_for('static', filename='bot.png') }}" alt="avatar 1" style="width: 45px; height: 100%;">
+            <img class="bg-white" src="{{ url_for('static', filename='movie.gif') }}" alt="avatar 1" style="width: 45px; height: 100%;">
             <div class="p-3 ms-3" style="border-radius: 15px; background-color: rgba(116, 107, 171, 0.2);">
                 <p class="small mb-0">{{message.content}}</p>
             </div>
@@ -28,7 +28,7 @@
   <!-- Formulario para preferencias -->
   <form action="{{ url_for('chat') }}" method="POST">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <p style="font-weight: bold; margin-top: 14px; color: yellow"> Preferencias: </p>
+      <p style="font-weight: bold; margin-top: 14px; color: yellowgreen"> Preferencias: </p>
       {% for option in user_refs %}
           <button type="submit" name="intent" value="{{ option }}" class="btn btn-success" style="margin: 5px;">
               {{ option }}
