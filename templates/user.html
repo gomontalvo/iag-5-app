@@ -6,17 +6,32 @@
 
 {% block content %}
 <div class="container mt-5">
-    <h1>Perfil de Usuario: {{ username }}</h1>
+    <!-- Barra superior con color fijo -->
+    <div class="d-flex justify-content-end align-items-center p-3" style="background-color: #1e1e1e; color: #ffffff; border-bottom: 1px solid #343a40;">
+        <!-- Botón para volver al chat -->
+        <a href="{{ url_for('chat') }}" class="btn btn-secondary me-2">Volver al Chat</a>
+        <!-- Botón para cerrar sesión -->
+        <form id="logout-form" action="{{ url_for('logout') }}" method="POST" style="margin: 0;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" id="logout-button" class="btn btn-danger">Cerrar Sesión</button>
+        </form>
+    </div>
+
+    <!-- Encabezado principal -->
+    <div class="d-flex justify-content-between align-items-center mt-5 pt-5">
+        <h1>Perfil de Usuario: {{ username }}</h1>
+    </div>
 
     <!-- Mostrar mensaje de error -->
     {% if mensaje_error %}
-    <div class="alert alert-danger" role="alert">
+    <div class="alert alert-danger mt-3" role="alert">
         {{ mensaje_error }}
     </div>
     {% endif %}
 
     <!-- Formulario para agregar nuevas preferencias -->
-    <form method="POST" action="{{ url_for('user_profile', user_id=user_id) }}">
+    <form id="user-profile-form" method="POST" action="{{ url_for('user_profile') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="mb-3">
             <label for="preferencia" class="form-label">Preferencia</label>
             <input type="text" id="preferencia" name="preferencia" class="form-control" placeholder="Escribe tu preferencia">
@@ -24,8 +39,9 @@
         <div class="mb-3">
             <label for="categoria" class="form-label">Tipo de Preferencia</label>
             <select id="categoria" name="categoria" class="form-select">
+                <option value="" selected disabled>Selecciona una categoría</option>
                 <option value="G">Género - G</option>
-                <option value="T">Película - T</option>
+                <option value="T">Título película - T</option>
             </select>
         </div>
         <button type="submit" class="btn btn-primary">Guardar Preferencia</button>
@@ -49,7 +65,8 @@
                 <td>{{ preference.preferencia }}</td>
                 <td>{{ preference.categoria }}</td>
                 <td>
-                    <form method="POST" action="{{ url_for('delete_preference', user_id=user_id) }}">
+                    <form class="delete-preference-form" method="POST" action="{{ url_for('delete_preference') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <input type="hidden" name="preference_id" value="{{ preference.id }}">
                         <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
                     </form>
@@ -61,5 +78,6 @@
 </div>
 {% endblock %}
 
-
-
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+{% endblock %}

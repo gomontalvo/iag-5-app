@@ -1,3 +1,4 @@
+import bcrypt
 from sqlalchemy.orm import relationship
 from db import db
 from sqlalchemy import (
@@ -9,19 +10,20 @@ from sqlalchemy import (
     ForeignKey,
 )
 from datetime import datetime
+from flask_login import UserMixin
 
 
-class User(db.Model):
+class User(db.Model,UserMixin):
    __tablename__ = "users"
 
    id = Column(Integer, primary_key=True, autoincrement=True)
    created_at = Column(DateTime, default=datetime.utcnow)
    email = Column(String, nullable=False, unique=True)
-
-   messages = relationship("Message", back_populates="user")
    preferencias= relationship("Preferencias", back_populates="user")
+   password_hash = Column(String, nullable=False)
+   messages = relationship("Message", back_populates="user")
 
-
+ 
 class Message(db.Model):
    __tablename__ = "messages"
    

@@ -18,9 +18,9 @@
         <!-- Your page content -->
         {% block content %}{% endblock %}
 
+        <!-- Scripts -->
         {% block scripts %}
-            <!-- Optional JavaScript -->
-            {{ bootstrap.load_js() }}
+        {{ bootstrap.load_js() }} <!-- Carga de JavaScript de Bootstrap -->
         {% endblock %}
     </body>
 </html>

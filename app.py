@@ -1,16 +1,104 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify 
+from flask import Flask, render_template, request, flash, jsonify,redirect, url_for
 from flask_bootstrap import Bootstrap5
 from openai import OpenAI
 from dotenv import load_dotenv
 from db import db, db_config
 from models import User, Message, Preferencias
+from forms import  SignUpForm, LoginForm
+from flask_wtf.csrf import CSRFProtect
+from os import getenv
+import json
+from flask_login import LoginManager, login_required, login_user, current_user, logout_user
+from flask_bcrypt import Bcrypt
+from langsmith.wrappers import wrap_openai
+from bot import search_movie_or_tv_show, where_to_watch, search_movie_credits
 
 load_dotenv()
 
+login_manager = LoginManager()
+login_manager.login_view = 'login'
+login_manager.login_message = 'Inicia sesión para continuar'
+
 client = OpenAI()
 app = Flask(__name__)
+app.secret_key = 'yuqita78@_'#arreglar después por variable de entonno
+
+app.config['WTF_CSRF_ENABLED'] = True
+
+csrf = CSRFProtect(app)
+login_manager.init_app(app)
+bcrypt = Bcrypt(app)
+
 bootstrap = Bootstrap5(app)
 db_config(app)
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+tools = [
+    {
+        'type': 'function',
+        'function': {
+            "name": "where_to_watch",
+            "description": "Returns a list of platforms where a specified movie can be watched.",
+            "parameters": {
+                "type": "object",
+                "required": [
+                    "name"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "The name of the movie to search for"
+                    }
+                },
+                "additionalProperties": False
+            }
+        },
+    },
+    {
+        'type': 'function',
+        'function': {
+            "name": "search_movie_or_tv_show",
+            "description": "Returns information about a specified movie or TV show.",
+            "parameters": {
+                "type": "object",
+                "required": [
+                    "name"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "The name of the movie/tv show to search for"
+                    }
+                },
+                "additionalProperties": False
+            }
+        },
+    },
+    {
+        'type': 'function',
+        'function': {
+            "name": "search_movie_credits",
+            "description": "Returns a list of credits or actors of the movie or TV show.",
+            "parameters": {
+                "type": "object",
+                "required": [
+                    "name"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "The credits of the movie or series to search for"
+                    }
+                },
+                "additionalProperties": False
+            }
+        },
+    }
+]
 
 
 @app.route('/')
@@ -18,13 +106,15 @@ def index():
     return render_template('landing.html')
 
 
-
 @app.route('/chat', methods=['GET', 'POST'])
+@login_required
 def chat():
-    user = db.session.query(User).first()
+    # Usar el usuario actual autenticado
+    user = current_user
 
-    if not user:
-        return "Usuario no encontrado", 404
+    if not user.is_authenticated:
+        flash("Debes iniciar sesión para acceder al chat.", "error")
+        return redirect(url_for('login'))
    
     # Obtener preferencias del usuario
     preferences = db.session.query(Preferencias).filter_by(user_id=user.id).all()
@@ -34,9 +124,7 @@ def chat():
     
     # Crear dinámicamente intents a partir de las preferencias de tipo Género (G)
     intents = {genre: f"Recomiéndame una película de {genre}" for genre in genres}
-
     intents['Quiero tener suerte'] = 'Recomiéndame una película'
-
     options = list(intents.keys())
 
     if request.method == 'GET':
@@ -47,9 +135,9 @@ def chat():
 
     if intent in intents:
         user_message = intents[intent]
-        final_message = user_message  
-        if user_message== 'Recomiéndame una película':
-             preferences_text = " ,mis preferencias son: " + ", ".join(genres + titles)
+        final_message = user_message
+        if user_message == 'Recomiéndame una película':
+            preferences_text = " ,mis preferencias son: " + ", ".join(genres + titles)
         else:
             preferences_text = ""  # No se agregan preferencias si se selecciona Género de película
     else:
@@ -82,72 +170,128 @@ def chat():
     chat_completion = client.chat.completions.create(
         messages=messages_for_llm,
         model="gpt-4o",
-        temperature=1
+        temperature=1,
+        tools=tools,
     )
 
-    model_recommendation = chat_completion.choices[0].message.content
+    if chat_completion.choices[0].message.tool_calls:
+        tool_call = chat_completion.choices[0].message.tool_calls[0]
+
+        if tool_call.function.name == 'where_to_watch':
+            arguments = json.loads(tool_call.function.arguments)
+            name = arguments['name']
+            model_recommendation = where_to_watch(client, name, user, ", ".join(genres))
+        elif tool_call.function.name == 'search_movie_credits':
+            arguments = json.loads(tool_call.function.arguments)
+            name = arguments['name']
+            model_recommendation = search_movie_credits(client, name, user, ", ".join(genres))
+        elif tool_call.function.name == 'search_movie_or_tv_show':
+            arguments = json.loads(tool_call.function.arguments)
+            name = arguments['name']
+            model_recommendation = search_movie_or_tv_show(client, name, user, ", ".join(genres))
+    else:
+        model_recommendation = chat_completion.choices[0].message.content
+
     db.session.add(Message(content=model_recommendation, author="assistant", user=user))
     db.session.commit()
 
     return render_template('chat.html', messages=user.messages, user_refs=options)
 
-@app.route('/user/<int:user_id>', methods=['GET', 'POST'])
-def user_profile(user_id):
-    # Obtener el usuario por su ID
-    user = db.session.query(User).filter_by(id=user_id).first()
-    if not user:
-        return "Usuario no encontrado", 404
+@app.route('/sign-up', methods=['GET', 'POST'])
+def sign_up():
+    form = SignUpForm()
+    if request.method == 'POST':
+        if form.validate_on_submit():
+            email = form.email.data
+            password = form.password.data
+            user = User(email=email, password_hash=bcrypt.generate_password_hash(password).decode('utf-8'))
+            db.session.add(user)
+            db.session.commit()
+            login_user(user)
+            return redirect(url_for('chat'))
+    return render_template('sign-up.html', form=form)
 
+@app.route('/log-in', methods=['GET', 'POST'])
+def login():
+    form = LoginForm()
+
+    if request.method == 'POST':
+        if form.validate_on_submit():
+            email = form.email.data
+            password = form.password.data
+            user = db.session.query(User).filter_by(email=email).first()
+            if user and bcrypt.check_password_hash(user.password_hash, password):
+                login_user(user)
+                return redirect('chat')
+
+            flash("El correo o la contraseña es incorrecta.", "error")
+
+    return render_template('log-in.html', form=form)
+
+@app.route('/logout', methods=['GET', 'POST'])
+def logout():
+    logout_user()
+    return redirect('/')
+
+@app.route('/user', methods=['GET', 'POST'])
+@login_required
+def user_profile():
     mensaje_error = None  # Variable para manejar mensajes de error
 
     if request.method == 'POST':
         # Recuperar datos del formulario
-        preferencia = request.form.get('preferencia')
-        categoria = request.form.get('categoria')
+        preferencia = request.form.get('preferencia', '').strip()
+        categoria = request.form.get('categoria', '').strip()
 
-        # Verificar si ya existe una preferencia igual
-        existing_pref = db.session.query(Preferencias).filter_by(
-            preferencia=preferencia,
-            categoria=categoria,
-            user_id=user.id
-        ).first()
-
-        if existing_pref:
-            # Evitar duplicados
-            mensaje_error = f"La preferencia '{preferencia}' ya existe en la categoría '{categoria}'."
+        # Validar campos obligatorios
+        if not preferencia or not categoria:
+            mensaje_error = "Todos los campos son obligatorios."
         else:
-            # Guardar nueva preferencia si no existe
-            db.session.add(Preferencias(preferencia=preferencia, categoria=categoria, user=user))
-            db.session.commit()
-            return redirect(url_for('user_profile', user_id=user.id))
+            # Verificar si ya existe una preferencia igual
+            existing_pref = db.session.query(Preferencias).filter_by(
+                preferencia=preferencia,
+                categoria=categoria,
+                user_id=current_user.id
+            ).first()
 
-    # Obtener preferencias actuales
-    preferences = db.session.query(Preferencias).filter_by(user_id=user.id).all()
+            if existing_pref:
+                mensaje_error = f"La preferencia '{preferencia}' ya existe en la categoría '{categoria}'."
+            else:
+                # Guardar nueva preferencia si no existe
+                nueva_preferencia = Preferencias(preferencia=preferencia, categoria=categoria, user_id=current_user.id)
+                db.session.add(nueva_preferencia)
+                db.session.commit()
+                flash("Preferencia agregada exitosamente.", "success")
+                return redirect(url_for('user_profile'))
+
+    # Obtener preferencias actuales del usuario
+    preferences = db.session.query(Preferencias).filter_by(user_id=current_user.id).all()
 
     return render_template(
         'user.html', 
-        username=user.email,
-        user_id=user.id,
+        username=current_user.email,
         preferences=preferences,
-        mensaje_error=mensaje_error  # Pasar mensaje de error al frontend
+        mensaje_error=mensaje_error
     )
-          
 
 
-@app.route('/user/<int:user_id>/delete_preference', methods=['POST'])
-def delete_preference(user_id):
-    # Obtener el usuario por su ID
-    user = db.session.query(User).filter_by(id=user_id).first()
-    if not user:
-        return "Usuario no encontrado", 404
-
+@app.route('/user/delete_preference', methods=['POST'])
+@login_required
+def delete_preference():
     # Recuperar el ID de la preferencia a eliminar
     preference_id = request.form.get('preference_id')
 
+    if not preference_id:
+        flash("No se especificó una preferencia para eliminar.", "error")
+        return redirect(url_for('user_profile'))
+
     # Buscar y eliminar la preferencia correspondiente
-    preference = db.session.query(Preferencias).filter_by(id=preference_id, user_id=user.id).first()
+    preference = db.session.query(Preferencias).filter_by(id=preference_id, user_id=current_user.id).first()
     if preference:
         db.session.delete(preference)
         db.session.commit()
+        flash("Preferencia eliminada exitosamente.", "success")
+    else:
+        flash("No se encontró la preferencia especificada.", "error")
 
-    return redirect(url_for('user_profile', user_id=user.id))
+    return redirect(url_for('user_profile'))
