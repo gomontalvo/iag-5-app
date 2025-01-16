@@ -28,7 +28,7 @@
   <!-- Formulario para preferencias -->
   <form action="{{ url_for('chat') }}" method="POST">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <p style="font-weight: bold; margin-top: 14px;"> Preferencias: </p>
+      <p style="font-weight: bold; margin-top: 14px; color: yellow"> Preferencias: </p>
       {% for option in user_refs %}
           <button type="submit" name="intent" value="{{ option }}" class="btn btn-success" style="margin: 5px;">
               {{ option }}
@@ -40,7 +40,7 @@
   <form method="POST">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="input-group mb-3">
-          <input name="message" class="form-control" placeholder="Enviar mensaje a Movienerd" aria-label="Tu mensaje" aria-describedby="send-message">
+          <input id="messageInput" name="message" class="form-control" placeholder="Enviar mensaje a Movienerd" aria-label="Tu mensaje" aria-describedby="send-message">
           <button type="submit" class="btn btn-primary" id="send-message" name="intent" value="Enviar">Enviar</button>
       </div>
   </form>
@@ -56,6 +56,16 @@
       </form>
   </div>
 </div>
+<script>
+    // Este script se ejecutará cuando la página haya terminado de cargarse.
+    document.addEventListener('DOMContentLoaded', function() {
+        // Enfocar automáticamente el campo de entrada con el ID 'messageInput'.
+        const messageInput = document.getElementById('messageInput');
+        if (messageInput) {
+            messageInput.focus();
+        }
+    });
+</script>
 {% endblock %}
 
 {% block scripts %}
