@@ -11,6 +11,7 @@ import json
 from flask_login import LoginManager, login_required, login_user, current_user, logout_user
 from flask_bcrypt import Bcrypt
 from bot import search_movie_or_tv_show, where_to_watch, search_movie_credits
+from markdown import markdown
 
 load_dotenv()
 
@@ -220,6 +221,8 @@ def chat():
     }]
 
     for message in user.messages:
+        if message.author == 'assistant':
+            message.content = markdown(message.content)
         messages_for_llm.append({
             "role": message.author,
             "content": message.content,
@@ -244,7 +247,8 @@ def chat():
         if tool_call.function.name == 'where_to_watch':
             arguments = json.loads(tool_call.function.arguments)
             name = arguments['name']
-            model_recommendation = where_to_watch(client, name, user, ", ".join(genres))
+            response_sf = where_to_watch(client, name, user, ", ".join(genres))
+            model_recommendation  = markdown(response_sf)
         elif tool_call.function.name == 'search_movie_credits':
             arguments = json.loads(tool_call.function.arguments)
             name = arguments['name']
