@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block title %}
-    Movienerd (BETA)
+    Moviener 1.0
 {% endblock %}
 
 {% block content %}
@@ -48,7 +48,7 @@
   <!-- Botones para preferencias y cerrar sesión -->
   <div class="d-flex justify-content-between align-items-center mt-4">
       <!-- Botón para preferencias de usuario -->
-      <a href="{{ url_for('user_profile') }}" class="btn btn-secondary me-2">Preferencias de Usuario</a>
+      <a href="{{ url_for('user_profile') }}" class="btn btn-warning me-2">Preferencias de Usuario</a>
       <!-- Botón para cerrar sesión -->
       <form id="logout-form" action="{{ url_for('logout') }}" method="POST" style="margin: 0;">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
