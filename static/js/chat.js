@@ -1,70 +1,97 @@
 function onLoad() {
-    let messageInput = document.getElementById('message')
-    let submitButton = document.getElementById('send-message')
+    const messageInput = document.getElementById('messageInput');
+    const submitButton = document.getElementById('send-message');
+    const form = document.querySelector('form');
+    const logoutForm = document.getElementById('logout-form');
 
-    messageInput.addEventListener('input', (event) => {
-        if (event.target.value.length > 0) {
-            submitButton.classList.remove('disabled')
-        } else {
-            submitButton.classList.add('disabled')
-        }
-    })
-
-    function addMessageToChat(message) {
-        let messageHTML = ''
-
-        if (message.author === 'assistant') {
-            messageHTML = `
-                <div class="d-flex flex-row justify-content-start mb-4">
-                    <img class="bg-white" src="/static/muby.png" alt="avatar 1" style="width: 45px; height: 100%;">
-                    <div class="p-3 ms-3" style="border-radius: 15px; background-color: rgba(57, 192, 237, .2);">
-                        <p class="mb-0">${message.content}</p>
-                    </div>
-                </div>
-            `;
-        } else {
-            messageHTML = `
-                <div class="d-flex flex-row justify-content-end mb-4">
-                    <div class="p-3 me-3 border bg-body-tertiary" style="border-radius: 15px;">
-                        <p class="mb-0">${message.content}</p>
-                    </div>
-                </div>
-            `
-        }
-
-        document.getElementById('messages').insertAdjacentHTML('beforeend', messageHTML)
+    // Manejador de cierre de sesión
+    if (logoutForm) {
+        logoutForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            if (confirm('¿Estás seguro que deseas cerrar sesión?')) {
+                this.submit();
+            }
+        });
     }
 
-    document.addEventListener('submit', async (event) => {
-        event.preventDefault()
+    // Estado inicial del botón de envío basado en el input
+    function updateSubmitButton() {
+        const isEmpty = !messageInput.value.trim();
+        submitButton.disabled = isEmpty;
+        if (isEmpty) {
+            submitButton.classList.add('disabled');
+        } else {
+            submitButton.classList.remove('disabled');
+        }
+    }
 
-        const form = event.target
-        const formData = new FormData(form)
+    // Actualizar estado del botón cuando cambia el input
+    messageInput.addEventListener('input', updateSubmitButton);
 
-        submitButton.classList.add('disabled')
-        messageInput.classList.add('disabled')
-        submitButton.value = 'Enviando...'
+    // Manejar envío del formulario
+    form.addEventListener('submit', async (event) => {
+        // Solo prevenir default y validar si no es un botón predefinido
+        const submitter = event.submitter;
+        if (submitter && submitter.name === 'intent' && submitter.classList.contains('btn-success')) {
+            // Permitir que los botones predefinidos funcionen normalmente
+            return;
+        }
 
-        addMessageToChat({
-            content: formData.get('message'),
-            author: 'user',
-        })
+        event.preventDefault();
 
-        messageInput.value = ''
+        // Verificar mensaje vacío
+        const messageContent = messageInput.value.trim();
+        if (!messageContent) {
+            return; // No enviar si está vacío
+        }
 
-        const response = await fetch('/chat', {
-            method: 'POST',
-            headers: {
-               'Accept': 'application/json',
-            },
-            body: formData,
-        })
+        const formData = new FormData(form);
 
-        const message = await response.json()
-        addMessageToChat(message)
-        messageInput.classList.remove('disabled')
-        submitButton.value = 'Enviar'
-    })
+        // Deshabilitar input y botón mientras se envía
+        submitButton.disabled = true;
+        messageInput.disabled = true;
+        submitButton.textContent = 'Enviando...';
+
+        try {
+            const response = await fetch('/chat', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                },
+                body: formData,
+            });
+
+            if (!response.ok) {
+                throw new Error('Error en la respuesta del servidor');
+            }
+
+            const message = await response.json();
+            
+            // Limpiar y resetear input después del envío exitoso
+            messageInput.value = '';
+            updateSubmitButton();
+
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Hubo un error al enviar el mensaje. Por favor, intenta de nuevo.');
+        } finally {
+            // Re-habilitar input y botón
+            submitButton.disabled = false;
+            messageInput.disabled = false;
+            submitButton.textContent = 'Enviar';
+        }
+    });
+
+    // Establecer estado inicial del botón
+    updateSubmitButton();
+
+    // Auto-scroll al último mensaje
+    const chatMessages = document.getElementById('chat-messages');
+    if (chatMessages) {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
 }
 
-document.addEventListener('DOMContentLoaded', onLoad)
+// Inicializar cuando el DOM está cargado
+document.addEventListener('DOMContentLoaded', onLoad);

@@ -6,7 +6,7 @@ from db import db, db_config
 from models import User, Message, Preferencias
 from forms import  SignUpForm, LoginForm
 from flask_wtf.csrf import CSRFProtect
-from os import getenv
+import os
 import json
 from flask_login import LoginManager, login_required, login_user, current_user, logout_user
 from flask_bcrypt import Bcrypt
@@ -21,7 +21,7 @@ login_manager.login_message = 'Inicia sesión para continuar'
 
 client = OpenAI()
 app = Flask(__name__)
-app.secret_key = 'yuqita78@_'#arreglar después por variable de entonno
+app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'default_secret_key')  # Usa una clave por defecto si no está definida.
 bootstrap = Bootstrap5(app)
 app.config['WTF_CSRF_ENABLED'] = True
 
@@ -184,8 +184,8 @@ def chat():
     # Obtener preferencias del usuario
     preferences = db.session.query(Preferencias).filter_by(user_id=user.id).all()
 
-    genres = [pref.preferencia for pref in preferences if pref.categoria == 'G'][:5]
-    titles = [pref.preferencia for pref in preferences if pref.categoria == 'T'][:5]
+    genres = [pref.preferencia for pref in preferences if pref.categoria == 'G'][:20]
+    titles = [pref.preferencia for pref in preferences if pref.categoria == 'T'][:20]
     
     # Crear dinámicamente intents a partir de las preferencias de tipo Género (G)
     intents = {genre: f"Recomiéndame una película de {genre}" for genre in genres}
@@ -293,7 +293,7 @@ def login():
                 login_user(user)
                 return redirect('chat')
 
-            flash("El correo o la contraseña es incorrecta.", "error")
+            flash("El correo o la contraseña es incorrecta.", "login_error")
 
     return render_template('log-in.html', form=form)
 

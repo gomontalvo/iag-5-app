@@ -5,64 +5,120 @@
 {% endblock %}
 
 {% block content %}
-<!-- Contenedor principal -->
+<!-- Contenedor principal del chat -->
 <div class="container col-xxl-8 px-4 py-5">
-  {% for message in messages %}
-    {% if message.author == 'assistant' %}
-        <div class="d-flex flex-row justify-content-start mb-4">
-            <img class="bg-white" src="{{ url_for('static', filename='movie.gif') }}" alt="avatar 1" style="width: 45px; height: 100%;">
-            <div class="p-3 ms-3" style="border-radius: 15px; background-color: rgba(116, 107, 171, 0.2);" >
-                <p class="small mb-0" style="white-space: pre-wrap;" class="response-content">{{message.content | safe}}</p>
+    <!-- Historial de mensajes -->
+    <div class="chat-history overflow-auto" id="chat-messages" style="max-height: 60vh;">
+        {% for message in messages %}
+            <!-- Mensajes del asistente -->
+            {% if message.author == 'assistant' %}
+                <div class="d-flex flex-row justify-content-start mb-4">
+                    <!-- Avatar del asistente -->
+                    <img class="bg-white" 
+                         src="{{ url_for('static', filename='movie.gif') }}" 
+                         alt="Avatar asistente" 
+                         style="width: 45px; height: 100%;">
+                    <!-- Contenedor del mensaje del asistente -->
+                    <div class="p-3 ms-3" 
+                         style="border-radius: 15px; background-color: rgba(116, 107, 171, 0.2);">
+                        <p class="small mb-0" 
+                           style="white-space: pre-wrap;">
+                           {{message.content | safe}}
+                        </p>
+                    </div>
+                </div>
+            <!-- Mensajes del usuario -->
+            {% else %}
+                <div class="d-flex flex-row justify-content-end mb-4">
+                    <!-- Avatar del usuario -->
+                    <div class="p-3 me-3" 
+                         style="border-radius: 15px; background-color: rgba(99, 90, 148, 0.188);">
+                        <p class="small mb-0">{{message.content}}</p>
+                    </div>
+                    <img class="bg-white" 
+                         src="{{ url_for('static', filename='user.png') }}" 
+                         alt="Avatar usuario" 
+                         style="width: 45px; height: 100%;">
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <!-- Sección de preferencias rápidas -->
+    <div class="preferences-section mb-4">
+        <p class="fw-bold text-success mb-2">Preferencias:</p>
+        <form id="preferences-form" action="{{ url_for('chat') }}" method="POST" class="d-flex flex-wrap gap-2">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            {% for option in user_refs %}
+                <button type="submit" 
+                        name="intent" 
+                        value="{{ option }}" 
+                        class="btn btn-success preference-button">
+                    {{ option }}
+                </button>
+            {% endfor %}
+        </form>
+    </div>
+
+    <!-- Formulario de entrada de mensaje -->
+    <div class="message-input-section">
+        <form id="message-form" method="POST" class="message-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="input-group mb-3">
+                <input id="messageInput" 
+                       name="message" 
+                       class="form-control" 
+                       placeholder="Enviar mensaje a Movienerd" 
+                       aria-label="Tu mensaje" 
+                       aria-describedby="send-message"
+                       autocomplete="off">
+                <button type="submit" 
+                        class="btn btn-primary" 
+                        id="send-message" 
+                        name="intent" 
+                        value="Enviar"
+                        disabled>
+                    Enviar
+                </button>
             </div>
-        </div>
-    {% else %}
-        <div class="d-flex flex-row justify-content-end mb-4">
-            <img class="bg-white" src="{{ url_for('static', filename='user.png') }}" alt="avatar 1" style="width: 45px; height: 100%;">
-            <div class="p-3 me-3" style="border-radius: 15px; background-color: rgba(99, 90, 148, 0.188);">
-                <p class="small mb-0">{{message.content}}</p>
-            </div>
-        </div>
-    {% endif %}
-  {% endfor %}
+        </form>
+    </div>
 
-  <!-- Formulario para preferencias -->
-  <form action="{{ url_for('chat') }}" method="POST">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <p style="font-weight: bold; margin-top: 14px; color: yellowgreen"> Preferencias: </p>
-      {% for option in user_refs %}
-          <button type="submit" name="intent" value="{{ option }}" class="btn btn-success" style="margin: 5px;">
-              {{ option }}
-          </button>
-      {% endfor %}
-  </form>
-
-  <!-- Formulario para enviar mensajes -->
-  <form method="POST">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <div class="input-group mb-3">
-          <input id="messageInput" name="message" class="form-control" placeholder="Enviar mensaje a Movienerd" aria-label="Tu mensaje" aria-describedby="send-message">
-          <button type="submit" class="btn btn-primary" id="send-message" name="intent" value="Enviar">Enviar</button>
-      </div>
-  </form>
-
-  <!-- Botones para preferencias y cerrar sesión -->
-  <div class="d-flex justify-content-between align-items-center mt-4">
-      <!-- Botón para preferencias de usuario -->
-      <a href="{{ url_for('user_profile') }}" class="btn btn-warning me-2">Preferencias de Usuario</a>
-      <!-- Botón para cerrar sesión -->
-      <form id="logout-form" action="{{ url_for('logout') }}" method="POST" style="margin: 0;">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button type="submit" id="logout-button" class="btn btn-danger">Cerrar Sesión</button>
-      </form>
-  </div>
+    <!-- Barra de acciones del usuario -->
+    <div class="user-actions d-flex justify-content-between align-items-center mt-4">
+        <!-- Botón de preferencias -->
+        <a href="{{ url_for('user_profile') }}" 
+           class="btn btn-warning me-2">
+            Preferencias de Usuario
+        </a>
+        <!-- Formulario de cierre de sesión -->
+        <form id="logout-form" 
+              action="{{ url_for('logout') }}" 
+              method="POST" 
+              class="m-0">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" 
+                    id="logout-button" 
+                    class="btn btn-danger">
+                Cerrar Sesión
+            </button>
+        </form>
+    </div>
 </div>
+
+<!-- Script para inicialización -->
 <script>
-    // Este script se ejecutará cuando la página haya terminado de cargarse.
     document.addEventListener('DOMContentLoaded', function() {
-        // Enfocar automáticamente el campo de entrada con el ID 'messageInput'.
+        // Enfoca automáticamente el campo de entrada al cargar la página
         const messageInput = document.getElementById('messageInput');
         if (messageInput) {
             messageInput.focus();
+        }
+
+        // Auto-scroll al último mensaje
+        const chatMessages = document.getElementById('chat-messages');
+        if (chatMessages) {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
         }
     });
 </script>
